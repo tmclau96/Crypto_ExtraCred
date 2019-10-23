@@ -91,7 +91,7 @@ ki_permutation = (14, 17, 11, 24, 1, 5, 3, 28,
                  34, 53, 46, 42, 50, 36, 29, 32)
 
 # used after every s box sub
-every_round_permutation = (6, 7, 20, 21, 29, 12, 28, 17,
+every_round_permutation = (16, 7, 20, 21, 29, 12, 28, 17,
                            1, 15, 23, 26, 5, 18, 31, 10,
                            2, 8, 24, 14, 32, 27, 3, 9,
                            19, 13, 30, 6, 22, 11, 4, 25)
@@ -109,3 +109,112 @@ final_permutation = (40, 8, 48, 16, 56, 24, 64, 32,
 # key shift table
 shift = (1, 1, 2, 2, 2, 2, 2, 2, 1, 2, 2, 2, 2, 2, 2, 1)
 
+
+# encrypting des
+def encryption(message, key):
+    assert isinstance(message, int) and isinstance(key,int)  # may need to change for broken des
+    assert not message.bit_length() > 64
+    assert not key.bit_length() > 64
+
+    # permut key
+    key = permutation_by_table(key, 64, key_permutation)
+
+    # split and generate 16 round keys
+    C0 = key >>28
+    D0 = key & (2**28-1)
+    round_keys = generate_keys(C0,D0)
+    message_block = permutation_by_table(message, 64, initial_permutation)
+    L0 = message_block >> 32
+    R0 = message_block & (2**32-1)
+
+    L_last = L0
+    R_last = R0
+
+    for i in range(1,17):
+        L_round = R_last
+        R_round = L_last ^ round_function(R_last, round_keys[i])
+        L_last = L_round
+        R_last = R_round
+
+    cipher_block = (R_round << 32) + L_round
+
+    # final permutation
+    cipher_block = permutation_by_table(cipher_block, 64, final_permutation)
+
+    return cipher_block
+
+
+def permutation_by_table(block, block_length, table):
+    block_str = bin(block)[2:].zfill(block_length)
+    perm = []
+    for pos in range(len(table)):
+        perm.append(block_str[table[pos] - 1])
+    return int(''.join(perm), 2)
+
+def generate_keys(C0,D0):
+
+    round_keys = dict.fromkeys(range(0,17))
+
+    #left rotation function
+    lrot = lambda val, r_bits, max_bits: \
+        (val << r_bits%max_bits) & (2**max_bits-1) | \
+        ((val & (2**max_bits-1)) >> (max_bits-(r_bits%max_bits)))
+
+    # initial rotation
+    C0 = lrot(C0, 0, 28)
+    D0 = lrot(D0, 0, 28)
+    round_keys[0] = (C0, D0)
+
+    # create 16 more keys
+    for i, rot_val in enumerate(shift):
+        i += 1
+        Ci = lrot(round_keys[i - 1][0], rot_val, 28)
+        Di = lrot(round_keys[i - 1][1], rot_val, 28)
+        round_keys[i] = (Ci, Di)
+
+    del round_keys[0]
+
+    for i, (Ci, Di) in round_keys.items():
+        Ki = (Ci << 28) + Di
+        round_keys[i] = permutation_by_table(Ki, 56, ki_permutation)
+
+    return round_keys
+
+def round_function(Ri, Ki):
+    # expansion function
+    Ri = permutation_by_table(Ri, 32, expansion_permutation)
+
+    # XOR with key
+    Ri ^= Ki
+
+    # split ri
+    Ri_blocks = [((Ri & (0b111111 << shift_val)) >> shift_val) for shift_val in (42, 36, 30, 24, 18, 12, 6, 0)]
+
+    # look up in sbox
+    for i, block in enumerate(Ri_blocks):
+        row = ((0b100000 & block) >> 4) + (0b1 & block)
+        col = (0b011110 & block) >> 1
+        Ri_blocks[i] = s_boxes[i][16 * row + col]
+
+    Ri_blocks = zip(Ri_blocks, (28, 24, 20, 16, 12, 8, 4, 0))
+    Ri = 0
+    for block, lshift_val in Ri_blocks:
+        Ri += (block << lshift_val)
+
+    Ri = permutation_by_table(Ri, 32, every_round_permutation)
+
+    return Ri
+
+
+def main():
+    message = 0x8787878787878787
+    key = 0x0e329232ea6d0d73
+
+    print('key:       {:x}'.format(key))
+    print('message:   {:x}'.format(message))
+    cipher_text = encryption(message, key)
+    print('encrypted: {:x}'.format(cipher_text))
+
+
+if __name__ == "__main__":
+    main()
