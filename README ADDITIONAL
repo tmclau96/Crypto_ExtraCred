@@ -1,5 +1,6 @@
 #README ADDITIONAL
 Additional Suorces for help
+https://cryptography.io/en/latest/hazmat/primitives/padding/
 https://tls.mbed.org/des-source-code
 https://stackoverflow.com/questions/32860206/use-of-initialization-vector-in-des
 https://jhafranco.com/2012/01/16/des-implementation-in-python-3/
