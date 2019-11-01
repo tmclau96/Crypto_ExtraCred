@@ -1,3 +1,5 @@
+# https://github.com/RobinDavid/pydes/blob/master/pydes.py
+# Following Parts 
 PI = [58, 50, 42, 34, 26, 18, 10, 2,
       60, 52, 44, 36, 28, 20, 12, 4,
       62, 54, 46, 38, 30, 22, 14, 6,
@@ -95,8 +97,10 @@ PI_1 = [40, 8, 48, 16, 56, 24, 64, 32,
         34, 2, 42, 10, 50, 18, 58, 26,
         33, 1, 41, 9, 49, 17, 57, 25]
 
-
+# Project Prompt
 SHIFT = [1,2,2,2,2,2,2,1,1,1,2,2,2,2,2,2]
+# https://github.com/RobinDavid/pydes/blob/master/pydes.py
+#Source of where Code is
 
 def string_to_bit_array(text):
     array = list()
@@ -218,7 +222,7 @@ class des():
     
 if __name__ == '__main__':
     key = "0x133457799BBCDFF1"
-    text= "poopy butt dog"
+    text= "We Tried "
     d = des()
     r = d.encrypt(key,text)
    # r = "b969a98b443f2b99a7289af586443ee966d3d64010ee2c0d70dc095e90074bf9035562c80081fde8bd30443e46a7e4535a4038cf0e3e6198d64dddab50d2158f4ebd5c599565c59a213999bef073af9baa309c95f677cf28fc63c00d72b0a56f9b001b6720c2c5aef46689fc602e049a5135c037011930cfe51894ae2382b9b9e1e658e99556b1de9a20c25ebeb23c1d22b2d92afca4789d0ee38437648d9254"
